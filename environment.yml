@@ -1,0 +1,11 @@
+name: hypersparse
+channels:
+  - pytorch
+  - default
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pip
+  - cudatoolkit=11.3
+  - pytorch=1.12.1
+  - torchvision=0.13.1
