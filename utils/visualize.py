@@ -19,22 +19,6 @@ def plot_gradient(model, art_epoch, prune_rate):
     sort_w, sort_idx = torch.sort(w_abs)
     sort_g = g[sort_idx].abs()
 
-    #check sign
-    sign_w = torch.sign(w)
-    sign_g = torch.sign(g)
-
-    mask_xor = torch.logical_xor(sign_w, sign_g)
-    test01 = mask_xor.sum().item()
-    #assert test01 == 0
-    test02 = torch.logical_not(mask_xor).sum().item()
-
-    mask_w = w[mask_xor]
-    mask_g = g[mask_xor]
-    #test_w = torch.unique(sign_w)
-    #test_g = torch.unique(sign_g)
-
-
-
     #plot gradient
     idx = torch.arange(0, w_abs.shape[0],1) / w_abs.shape[0]
     start_idx = math.floor(0.65 * w_abs.shape[0])

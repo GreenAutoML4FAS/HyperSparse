@@ -32,11 +32,11 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 
 def calc_reg_loss (model, args):
-    if args.regulaization_func == "hypersparse":
+    if args.regularization_func == "hypersparse":
         return hyperSparse(model, args.prune_rate)
-    elif args.regulaization_func == "L1":
+    elif args.regularization_func == "L1":
         pass #todo implement
-    elif args.regulaization_func == "L2":
+    elif args.regularization_func == "L2":
         pass #todo implement
     else:
         assert False
@@ -79,19 +79,6 @@ def train(data_loader, model, criterion, optimizer, mask, epoch, train_step, arg
             regularization_loss = calc_reg_loss(model, args)
             alpha = args.lambda_init * (args.eta ** float(epoch - args.warmup_epochs))
             loss_basis += alpha * regularization_loss
-
-            #todo delte this
-            '''
-            if batch_idx == (len(data_loader)-1) and ((epoch+1 - args.warmup_epochs)%10) == 0:
-                regularization_loss.backward()
-                from utils.visualize import plot_gradient
-                w1, g1 = plot_gradient(model, epoch - args.warmup_epochs, args.prune_rate)
-
-                optimizer.zero_grad()
-                outputs = model(inputs)
-                loss_basis = criterion(outputs, targets)
-            '''
-
 
         loss_basis.backward()
 
