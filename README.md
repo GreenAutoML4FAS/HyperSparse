@@ -6,13 +6,13 @@
 
 <b>[HyperSparse](https://arxiv.org/pdf/2308.07163)</b> is a novel regularization-loss for sparse neural networks that adaptively penalizes small weights with a higher regularization.
 As shown in the figure above, weights with a small magnitude are regularized by factor 1 in earlier epochs which is comparable to the L1-Loss .
-For weights beyond the given pruning-rate (&kappa;=90%), HyperSparse decreases smoothly to zero.
+For weights beyond the pruning-rate (&kappa;=90%), HyperSparse decreases smoothly to zero.
 Looking the gradient behaviour over epoch e, the model-weights becomes sparse for small weights.
 This results in an increasing gap of HyperSparse's gradient, as shown in epoch 40.
 
 To sum up, Hypersparse has the following properties:
 - smoothly decreasing gradient for weight above pruning-rate &kappa;
-- point of inflections turns to be at the given pruning-rate 
+- point of inflections turns to be at pruning-rate &kappa 
 - increasing gradient-gap between potentially pruned and remaining weights over epoch e
 - creates well performing models in very high sparsity regimes 
 
@@ -45,7 +45,7 @@ $ conda activate hypersparse
 ## How to apply HyperSparse-Loss?
 
 There are two types for using HyperSparse loss. 
-1. add HyperSparse to the Basis-Loss
+1. add the HyperSparse-Loss `hyperSparse(model, prune_rate)` to the Basis-Loss
 2. calculate the gradient of Hypersparse directly by `grad_HS_loss(model, prune_rate)` and add the regularization after backward step 
 
 We recomment to use method 1, due to it's speedup in training.
