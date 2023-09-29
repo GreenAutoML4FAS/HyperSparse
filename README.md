@@ -5,15 +5,15 @@
 
 
 <b>[HyperSparse](https://arxiv.org/pdf/2308.07163)</b> is a novel regularization-loss for sparse neural networks that adaptively penalizes small weights with a higher regularization.
-As shown in the figure above, weights with a small magnitude are regularized with one for non-sparse models which is comparable to the L1-Loss .
-For weights above the given pruning-rate (&kappa;=90%), HyperSparse decreases smoothly to zero.
+As shown in the figure above, weights with a small magnitude are regularized by factor 1 in earlier epochs which is comparable to the L1-Loss .
+For weights beyond the given pruning-rate (&kappa;=90%), HyperSparse decreases smoothly to zero.
 Looking the gradient behaviour over epoch e, the model-weights becomes sparse for small weights.
 This results in an increasing gap of HyperSparse's gradient, as shown in epoch 40.
 
 To sum up, Hypersparse has the following properties:
 - smoothly decreasing gradient for weight above pruning-rate &kappa;
 - point of inflections turns to be at the given pruning-rate 
-- increasing gradient-gap between pruned and non-pruned weights over epoch e
+- increasing gradient-gap between potentially pruned and remaining weights over epoch e
 - creates well performing models in very high sparsity regimes 
 
 
