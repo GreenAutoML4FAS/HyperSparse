@@ -1,21 +1,22 @@
 
 import torch
 import math
-import torch.nn as nn
 
 
 from utils import is_prunable_module
 
 
 
-
-def hyperSparse(model, prune_rate):
-
+def _get_w_tens(model):
     w = []
     for m in model.modules():
         if is_prunable_module(m):
             w.append(torch.reshape(m.weight, [-1, 1]))
     w = torch.cat(w, dim=0).squeeze()
+    return w
+
+def hyperSparse(model, prune_rate):
+    w = _get_w_tens(model)
     w_abs = w.abs()
 
     #calculate hs_loss
@@ -35,6 +36,28 @@ def hyperSparse(model, prune_rate):
 
 
 def grad_HS_loss(model, prune_rate):
-    pass
-    #todo add derivative of HS-loss
+    w = _get_w_tens(model).detach()
+    w_abs = w.abs()
 
+    #calc s
+    w_sort, _ = torch.sort(w_abs)
+    idx = math.floor(prune_rate * w_sort.shape[0])
+    s = (0.6585 / w_sort[idx]).item()
+
+    #calculate HS-Gradients
+    w_tanh_deriv = s / (torch.cosh(s * w_abs) ** 2)
+    factor = w_abs.sum() / torch.tanh(s * w_abs).sum()
+    grad = torch.sign(w) * w_tanh_deriv * factor
+
+    #reshape to model_size
+    CNT = 0
+    w_grad = {}
+    for name, m in model.named_modules():
+        if is_prunable_module(m):
+            loss_w = grad[CNT: CNT + m.weight.data.numel()]
+            loss_w = loss_w.reshape(m.weight.data.shape)
+            w_grad[name] = loss_w
+
+            CNT += m.weight.data.numel()
+
+    return w_grad

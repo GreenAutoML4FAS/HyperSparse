@@ -78,7 +78,6 @@ def print_mask_statistics(mask, logger):
     total_param_model = 0
 
     for name, m in mask.items():
-        type = name.split(".")[-1]
 
         keep_param_mask = m.type(torch.int).sum().item()
         total_param_mask = m.numel()
@@ -88,7 +87,7 @@ def print_mask_statistics(mask, logger):
         total_param_model += total_param_mask
 
         logger.info("LAYER %d(%s) : KEEP_RATIO = %.6f    NUM_PARA = %d    REMAINED_PARA = %d" %
-                    (CNT, type, keep_ratio_mask * 100, total_param_mask, keep_param_mask))
+                    (CNT, name, keep_ratio_mask * 100, total_param_mask, keep_param_mask))
 
         CNT += 1
 

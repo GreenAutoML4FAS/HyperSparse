@@ -4,17 +4,15 @@ import random
 import logging
 import os
 import time
-import math
 import torch.backends.cudnn as cudnn
-import torch.nn as nn
 import torch.optim as optim
 
 from progress.bar import Bar as Bar
-from copy import deepcopy
 
 from utils import *
 from models import *
-from loss.HyperSparse import hyperSparse
+from loss.HyperSparse import hyperSparse, grad_HS_loss
+from loss.lx_loss import lx_loss
 
 
 def save_checkpoint(state, name, args):
@@ -32,12 +30,12 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 
 def calc_reg_loss (model, args):
-    if args.regularization_func == "hypersparse":
+    if args.regularization_func == "HS":
         return hyperSparse(model, args.prune_rate)
     elif args.regularization_func == "L1":
-        pass #todo implement
+        return lx_loss(model, p=1)
     elif args.regularization_func == "L2":
-        pass #todo implement
+        return lx_loss(model, p=2)
     else:
         assert False
 
@@ -233,102 +231,79 @@ def trainModel(args):
     best_test_acc = 0.0
     mask = None
     epoch = 0
+    fine_tune_terminated = False
 
     '''
        variables for ART (Adaptive Regularized Training)
     '''
-    art_terminated = False
-    fine_tune_terminated = False
-    model_buf = ModelBuffer(["epoch", "art_epoch", "train_acc_dens", "train_acc_pr", "model_pr", "mask"],
-                            maxBufferSize=2 * args.size_model_buffer + 1)
-    best_val = {"epoch": 0, "arg_epoch": 0, "train_acc_dens": 0.0, "train_acc_pr": 0.0, "model_pr": None, "mask": None}
-    last_art_epoch = 0
+    art_trainer = ART(test, logger, args)
 
-
-    while not (art_terminated and fine_tune_terminated):
+    while not (art_trainer.is_terminated() and fine_tune_terminated):
         logger.info("\n")
         if epoch < args.warmup_epochs:
             train_step = "Warmup"
-            epoch_step = [epoch, args.warmup_epochs]
-        elif not art_terminated:
+            epoch_step = [epoch + 1, args.warmup_epochs]
+        elif not art_trainer.is_terminated():
             train_step = "ART"
-            epoch_step =  [epoch - args.warmup_epochs, float("inf")]
+            epoch_step =  [epoch - args.warmup_epochs + 1, float("inf")]
         else:
             train_step = "FineTune"
-            epoch_step = [epoch - last_art_epoch, args.epochs]
-        logger.info(f"Start total Epoch {epoch+1} (STEP: {train_step}  in epoch [{epoch_step[0]+1} / {epoch_step[1]}] )")
+            epoch_step = [epoch - art_trainer.get_last_art_epoch() - args.warmup_epochs + 1, args.epochs]
+        logger.info(f"Start total Epoch {epoch+1} (STEP: {train_step}  in epoch [{epoch_step[0]} / {epoch_step[1]}] )")
 
         adjust_learning_rate(optimizer, epoch_step[0] - 1 if train_step == "FineTune" else 0, args)
         lr = optimizer.param_groups[0]["lr"]
         logger.info(f"lr={lr:.3f}")
 
-        train_loss_dens, train_acc_dens, alpha_val = train(train_loader, model, criterion, optimizer, mask, epoch, train_step, args)
-
-        test_loss_dens, test_acc = test(test_loader, model, criterion)
-
+        train_loss, train_acc, alpha_val = train(train_loader, model, criterion, optimizer, mask, epoch, train_step, args)
 
         '''
             ART (Adaptive Regularized Training)
+            trains until pruned train_accuracy overcomes the dense accuracy
         '''
-
         train_loss_pr, train_acc_pr = 0.0, 0.0
         if train_step == "ART":
-            model_pr, tmp_mask = mag_prune(deepcopy(model), args.prune_rate)
-
-            #check prune_rate
-            keep_param, total_param = 0, 0
-            for name, m in tmp_mask.items():
-                keep_param += m.type(torch.int).sum().item()
-                total_param += m.numel()
-
-            logger.info(f"prune_rate={1.0 - (keep_param/total_param):.3f} [{total_param - keep_param} / {total_param}]")
             logger.info(f"HS parameter:\talpha={alpha_val:.7f}")
+            train_loss_pr, train_acc_pr = art_trainer.forward_epoch(model, train_loader, criterion, train_acc)
 
-            train_loss_pr, train_acc_pr = test(train_loader, model_pr, criterion)
-            model_buf.update({"epoch": epoch, "art_epoch": epoch_step[0],
-                              "train_acc_dens": train_acc_dens, "train_acc_pr": train_acc_pr,
-                              "model_pr": model_pr, "mask": tmp_mask})
+            if art_trainer.is_terminated():
+                logger.info("******************************** ART terminated ********************************")
 
-            #update Buffer
-            if model_buf.avg_val_by_name("train_acc_pr") > best_val["train_acc_pr"]:
-                best_val = model_buf.get_middle_elem()
-
-            logger.info("ART best values: (epoch_total=%d, epoch_total=%d, "
-                        "train_acc_dens=%.2f, train_acc_pr=%.2f)"%
-                        (best_val["epoch"], best_val["art_epoch"], best_val["train_acc_dens"], best_val["train_acc_pr"]))
-
-            # termination_criteria
-            if best_val["train_acc_pr"] > train_acc_dens:
-                mask = best_val["mask"]
-                model = best_val["model_pr"]
-
+                model, mask = art_trainer.get_best_pruned_val()
                 optimizer = optim.SGD(model.parameters(), lr=args.lr,
-                          momentum=args.momentum,
-                          weight_decay=args.weight_decay)  # default is 0.001
-
-                art_terminated = True
-                last_art_epoch = epoch
+                                      momentum=args.momentum,
+                                      weight_decay=args.weight_decay)
 
                 print_mask_statistics(mask, logger)
+                logger.info("******************************** model pruned ********************************")
 
-        logger.info(f"Results: train_loss_dens={train_loss_dens:.4f}, train_loss_pr={train_loss_pr:.4f}, test_loss={test_loss_dens:.4f}")
-        logger.info(f"Results: train_acc_dens={train_acc_dens:.2f}, train_acc_pr={train_acc_pr:.2f}, test_acc={test_acc:.2f}")
 
-        # save model
-        is_best_test_acc = train_step == "FineTune" and (test_acc > best_test_acc)
-        if is_best_test_acc:
-            best_test_acc = max(test_acc, best_test_acc)
-            save_checkpoint({
-                'epoch': epoch + 1,
-                'state_dict': model.state_dict(),
-                'acc': test_acc,
-                'best_acc_pr': best_test_acc,
-                'optimizer': optimizer.state_dict(),
-            }, name="best", args=args)
-            logger.info(f"best_test_acc_pr={best_test_acc:.2f}")
+        if train_step != "FineTune":
+            logger.info(
+                f"Results Dense: train_loss_dens={train_loss:.4f},  train_acc_dens={train_acc:.2f}")
+            logger.info(f"Results Pruned: train_loss_pr={train_loss_pr:.4f}, train_acc_pr={train_acc_pr:.2f}")
+        else:
+            logger.info(f"Results Pruned: train_loss_pr={train_loss:.4f}, train_acc_pr={train_acc:.2f}")
 
-        if train_step == "FineTune":
-            fine_tune_terminated = (epoch - last_art_epoch) >= args.epochs
+            test_loss_dens, test_acc = test(test_loader, model, criterion)
+
+            # save model
+            is_best_test_acc = (test_acc > best_test_acc)
+            if is_best_test_acc:
+                best_test_acc = max(test_acc, best_test_acc)
+                save_checkpoint({
+                    'epoch': epoch + 1,
+                    'state_dict': model.state_dict(),
+                    'acc': test_acc,
+                    'best_acc_pr': best_test_acc,
+                    'optimizer': optimizer.state_dict(),
+                }, name="best", args=args)
+                logger.info(f"best_test_acc_pr={best_test_acc:.2f}")
+
+            logger.info(
+                f"Results Testing: test_loss={test_loss_dens:.4f}, test_acc={test_acc:.2f}, best_test_acc:{best_test_acc:.2f}")
+
+            fine_tune_terminated = (epoch - art_trainer.get_last_art_epoch() - args.warmup_epochs + 1) >= args.epochs
 
 
         epoch += 1

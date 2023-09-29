@@ -99,11 +99,12 @@ class AverageMeter(object):
 
 
 class ModelBuffer():
-    def __init__(self, listNames: list, maxBufferSize:int):
+    def __init__(self, listNames: list,  maxBufferSize:int, avg_list:list = None):
         self.num_elem = len(listNames)
         self.maxBufferSize = maxBufferSize
         self.middle_elem_idx = (maxBufferSize // 2)
         self.list_names = listNames
+        self.avg_list = avg_list
         self.currBufferLen = 0
 
         for name in listNames:
@@ -115,15 +116,26 @@ class ModelBuffer():
             if len(self.__dict__[k]) > self.maxBufferSize:
                 self.__dict__[k].pop(0)
             self.currBufferLen = len(self.__dict__[k])
+
+
+            #if k in self.avg_list:
+            #    self.__dict__[k + "_avg"].append(sum(self.__dict__[k]) / len(self.__dict__[k]))
+            #    if len(self.__dict__[k + "_avg"]) > self.maxBufferSize:
+            #        self.__dict__[k + "_avg"].pop(0)
+
+
     def get_middle_elem(self):
         actual_idx = min(self.currBufferLen - 1, self.middle_elem_idx)
 
         ret = {}
         for name in self.list_names:
             ret[name] = self.__dict__[name][actual_idx]
+        for name in self.avg_list:
+            ret["mean_" + name] = self.avg_val(name)
 
         return ret
 
 
-    def avg_val_by_name(self, name:str):
+    def avg_val(self, name:str):
         return sum(self.__dict__[name]) / len(self.__dict__[name])
+
