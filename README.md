@@ -1,7 +1,9 @@
 
 # HyperSparse Neural Networks: Shifting Exploration to Exploitation through Adaptive Regularization 
+
 by 
 Patrick Glandorf, Timo Kaiser, Bodo Rosenhahn
+
 ---
 
 
@@ -55,7 +57,7 @@ given in the paper.
 > pruning-rates &kappa;=90%. The weight index indicates the position of the
 > weight in the sorted weight vector. 
 
---- 
+
 
 
 <div align="center">
@@ -109,15 +111,19 @@ Allowed arguments are:
 - `--override_dir` (bool): override output directory if it exists (default: 
   `False`)
 - `--manual_seed` (int): manual seed (default: `None`)
+ 
 **Pruning arguments:**
 - `--prune_rate` (float): pruning rate (default: `0.9`)
 - `--eta` (float): eta value (default: `1.05`)
 - `--lambda_init` (float): initial lambda value (default: `5e-4`)
+ 
 **Dataset arguments:**
 - `--dataset` (str): dataset (default: `cifar10`)
-- `--model_arch` (str): model architecture (default: `resnet`)
+ 
 **Model arguments:**
 - `--model_depth` (int): model depth (default: `32`)
+- `--model_arch` (str): model architecture (default: `resnet`)
+ 
 **Training arguments:**
 - `--epochs` (int): number of epochs (default: `160`)
 - `--warmup_epochs` (int): warmup epochs (default: `60`)
@@ -193,6 +199,8 @@ method, we use the SMAC framework to optimize the hyperparameter for
 HyperSparse. The following table shows the results of the optimization:
 
 
+<div align="center">
+
 |  pruning-rate (&kappa;)  |  0%  | 90% | 98% | 99,5% |
 |:------------------------:|:----:|:---:|:---:|:-----:|
 |   Resnet32 on CIFAR10    | tbd  | tbd | tbd |  tbd  |
@@ -201,6 +209,8 @@ HyperSparse. The following table shows the results of the optimization:
 |   VGG19    on CIFAR100   | tbd  | tbd | tbd |  tbd  |
 | Resnet32 on TinyImageNet | tbd  | tbd | tbd |  tbd  |
 | VGG19    on TinyImageNet | tbd  | tbd | tbd |  tbd  |
+
+</div>
 
 The code to reproduce the optimization with SMAC is given in the
 `train_smac.py` script. Settings can be found in the source code.
