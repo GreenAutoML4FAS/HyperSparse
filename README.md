@@ -190,7 +190,7 @@ for epoch in range(EPOCHS):
 
 ---
 
-## Optimization using SMAC
+## AutoML using SMAC
 The published paper shows how to apply HyperSparse and proves its performance in
 a fair comparison to other sparsification methods by using the same 
 hyperparameter. Applying HyperSparse in the real world is not constrained to 
