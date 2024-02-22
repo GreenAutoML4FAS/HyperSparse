@@ -1,8 +1,10 @@
 
 # HyperSparse Neural Networks: Shifting Exploration to Exploitation through Adaptive Regularization 
 
-by 
-Patrick Glandorf, Timo Kaiser, Bodo Rosenhahn
+This is the code to the paper 
+[**"Q-SENN: Quantized Self-Explaining Neural Network"**](https://arxiv.org/abs/2312.13839) 
+by Patrick Glandorf, Timo Kaiser, and Bodo Rosenhahn
+which was accepted to ICCV23 Workshop.
 
 ---
 
@@ -190,33 +192,53 @@ for epoch in range(EPOCHS):
 
 ---
 
-## AutoML using SMAC
-The published paper shows how to apply HyperSparse and proves its performance in
-a fair comparison to other sparsification methods by using the same 
-hyperparameter. Applying HyperSparse in the real world is not constrained to 
-be comparable and have the same hyperparameter. To show the potential of our 
-method, we use the SMAC framework to optimize the hyperparameter for 
-HyperSparse. The following table shows the results of the optimization:
+[//]: # (## AutoML using SMAC)
+
+[//]: # (The published paper shows how to apply HyperSparse and proves its performance in)
+
+[//]: # (a fair comparison to other sparsification methods by using the same )
+
+[//]: # (hyperparameter. Applying HyperSparse in the real world is not constrained to )
+
+[//]: # (be comparable and have the same hyperparameter. To show the potential of our )
+
+[//]: # (method, we use the SMAC framework to optimize the hyperparameter for )
+
+[//]: # (HyperSparse. The following table shows the results of the optimization.)
+
+[//]: # ()
+
+[//]: # (SMAC Optimization Results:)
+
+[//]: # (<div align="center">)
+
+[//]: # ()
+[//]: # (|  pruning-rate &#40;&kappa;&#41;  |    0%    |        90%         |        98%         |       99,5%        |)
+
+[//]: # (|:------------------------:|:--------:|:------------------:|:------------------:|:------------------:|)
+
+[//]: # (|   Resnet32 on CIFAR10    | % &#40;+/- &#41; | 94.56 % &#40;+/- 0.19&#41; | 92.52 % &#40;+/- 0.04&#41; | 88.85 % &#40;+/- 0.16&#41; |)
+
+[//]: # (|   VGG19    on CIFAR10    | % &#40;+/- &#41; | 94.17 % &#40;+/- 0.07&#41; | 93.81 % &#40;+/- 0.14&#41; | 92.62 % &#40;+/- 0.13&#41; |)
+
+[//]: # (|   Resnet32 on CIFAR100   | % &#40;+/- &#41; | 74.12 % &#40;+/- 0.09&#41; | 69.62 % &#40;+/- 0.11&#41; | 59.10 % &#40;+/- 0.17&#41; |)
+
+[//]: # (|   VGG19    on CIFAR100   | % &#40;+/- &#41; | 73.81 % &#40;+/- 0.15&#41; | 72.28 % &#40;+/- 0.29&#41; | 68.79 % &#40;+/- 0.23&#41; |)
+
+[//]: # (| Resnet32 on TinyImageNet | % &#40;+/- &#41; |      % &#40;+/- &#41;      |      % &#40;+/- &#41;      |      % &#40;+/- &#41;      |)
+
+[//]: # (| VGG19    on TinyImageNet | % &#40;+/- &#41; |      % &#40;+/- &#41;      |      % &#40;+/- &#41;      |      % &#40;+/- &#41;      |)
+
+[//]: # ()
+[//]: # (</div>)
+
+[//]: # ()
+[//]: # (The code to reproduce the optimization with SMAC is given in the)
+
+[//]: # (`train_smac.py` script. Settings can be found in the source code.)
 
 
-<div align="center">
-
-|  pruning-rate (&kappa;)  |  0%  | 90% | 98% | 99,5% |
-|:------------------------:|:----:|:---:|:---:|:-----:|
-|   Resnet32 on CIFAR10    | tbd  | tbd | tbd |  tbd  |
-|   VGG19    on CIFAR10    | tbd  | tbd | tbd |  tbd  |
-|   Resnet32 on CIFAR100   | tbd  | tbd | tbd |  tbd  |
-|   VGG19    on CIFAR100   | tbd  | tbd | tbd |  tbd  |
-| Resnet32 on TinyImageNet | tbd  | tbd | tbd |  tbd  |
-| VGG19    on TinyImageNet | tbd  | tbd | tbd |  tbd  |
-
-</div>
-
-The code to reproduce the optimization with SMAC is given in the
-`train_smac.py` script. Settings can be found in the source code.
-
-
-## Reference
+## Citation
 
 If you find this work useful, please include the following citation:
 
@@ -231,8 +253,13 @@ If you find this work useful, please include the following citation:
 
 ---
 
+## License Notice
+
+The **content of this repository** is licensed under the [BSD 3-Clause](https://opensource.org/license/bsd-3-clause).   
+
 ## Acknowledgement
-This work was supported by the Federal Ministry of the Environment, Nature 
+This work was partially supported by the Federal Ministry of the Environment, 
+Nature 
 Conservation, Nuclear Safety and Consumer Protection, Germany under the project 
 **GreenAutoML4FAS** (grant no. 67KI32007A). 
 
