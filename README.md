@@ -2,7 +2,7 @@
 # HyperSparse Neural Networks: Shifting Exploration to Exploitation through Adaptive Regularization 
 
 This is the code to the paper 
-[**"Q-SENN: Quantized Self-Explaining Neural Network"**](https://arxiv.org/abs/2312.13839) 
+[**"HyperSparse Neural Networks: Shifting Exploration to Exploitation through Adaptive Regularization"**](https://arxiv.org/abs/2308.07163) 
 by Patrick Glandorf, Timo Kaiser, and Bodo Rosenhahn
 which was accepted to ICCV23 Workshop.
 
