@@ -148,7 +148,7 @@ class ResNet(nn.Module):
         x = self.layer2(x)  
         x = self.layer3(x) 
 
-        x = F.avg_pool2d(x,x.size()[3])
+        x = F.avg_pool2d(x,int(x.size()[3]))
         x = x.view(x.size(0), -1)
         x = self.fc(x)
 
